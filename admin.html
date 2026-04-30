@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Slices Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fafaf8;
+      --bg2: #f2f1ed;
+      --bg3: #e8e7e2;
+      --text: #1a1a18;
+      --text2: #6b6b67;
+      --text3: #a0a09a;
+      --border: rgba(0,0,0,0.09);
+      --border2: rgba(0,0,0,0.18);
+      --red: #A32D2D;
+      --red-light: #FCEBEB;
+      --green: #3B6D11;
+      --green-light: #EAF3DE;
+    }
+    @media(prefers-color-scheme:dark){
+      :root{
+        --bg:#141412;--bg2:#1c1c1a;--bg3:#242422;
+        --text:#f0efe8;--text2:#8a8a82;--text3:#5a5a54;
+        --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.16);
+        --red:#f09595;--red-light:#3a1a1a;--green:#97C459;--green-light:#1a2e0a;
+      }
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg2); color:var(--text); min-height:100vh; padding:0 0 80px; }
+    .topbar { background:var(--bg); border-bottom:1px solid var(--border2); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+    .topbar-left h1 { font-size:17px; font-weight:600; letter-spacing:-0.01em; }
+    .topbar-left p { font-size:12px; color:var(--text2); margin-top:2px; }
+    .admin-tag { font-size:10px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; padding:4px 10px; border-radius:20px; background:var(--bg3); color:var(--text2); border:1px solid var(--border2); font-family:'DM Mono',monospace; }
+    .main { max-width:680px; margin:0 auto; padding:1.5rem; }
+    .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:1.5rem; }
+    .metric { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+    .metric-label { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; font-family:'DM Mono',monospace; margin-bottom:5px; }
+    .metric-value { font-size:20px; font-weight:600; letter-spacing:-0.02em; font-family:'DM Mono',monospace; }
+    .metric-value.red { color:var(--red); }
+    .tabs { display:flex; gap:6px; margin-bottom:1.25rem; }
+    .tab { padding:6px 16px; border-radius:8px; border:1px solid var(--border); background:transparent; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text2); cursor:pointer; transition:all 0.15s; }
+    .tab.active { background:var(--bg3); color:var(--text); border-color:var(--border2); font-weight:500; }
+    .card { background:var(--bg); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:1.5rem; }
+    .card-header { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .card-header-label { font-size:11px; font-weight:500; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; font-family:'DM Mono',monospace; }
+    table { width:100%; border-collapse:collapse; }
+    th { padding:9px 16px; font-size:11px; font-weight:500; color:var(--text3); text-align:left; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:0.06em; font-family:'DM Mono',monospace; }
+    th.r { text-align:right; }
+    td { padding:9px 16px; border-bottom:1px solid var(--border); font-size:14px; }
+    td.r { text-align:right; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:var(--bg2); }
+    input[type=number] { width:60px; text-align:center; padding:5px 6px; font-size:13px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; transition:border-color 0.15s; }
+    input[type=number]:focus { outline:none; border-color:var(--border2); }
+    .owed { font-weight:600; font-family:'DM Mono',monospace; font-size:13px; }
+    .owed.pos { color:var(--red); }
+    .owed.zero { color:var(--text3); font-weight:400; }
+    .add-row { display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--border); background:var(--bg2); }
+    input[type=text] { flex:1; padding:7px 10px; font-size:13px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
+    input[type=text]:focus { outline:none; border-color:var(--border2); }
+    .btn { padding:7px 14px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:background 0.15s; }
+    .btn:hover { background:var(--bg2); }
+    .btn.danger { color:var(--red); border-color:transparent; font-size:12px; padding:4px 8px; }
+    .btn.danger:hover { background:var(--red-light); }
+    .wingard-row { background:var(--bg2); border-radius:10px; padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; }
+    .wingard-label { font-size:12px; color:var(--text2); margin-bottom:3px; }
+    .wingard-name { font-size:15px; font-weight:600; }
+    .wingard-amount { font-size:28px; font-weight:600; color:var(--red); font-family:'DM Mono',monospace; letter-spacing:-0.02em; }
+    .save-bar { position:fixed; bottom:0;left:0;right:0; background:var(--bg); border-top:1px solid var(--border2); padding:12px 1.5rem; display:flex; justify-content:center; align-items:center; gap:10px; z-index:100; }
+    .save-status { font-size:12px; font-family:'DM Mono',monospace; color:var(--text2); }
+    .save-status.saved { color:var(--green); }
+    .save-status.error { color:var(--red); }
+    .tabpanel { display:none; }
+    .tabpanel.active { display:block; }
+    @media(max-width:520px){ .summary-grid{grid-template-columns:1fr 1fr} input[type=number]{width:48px} }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>Slices Tracker</h1>
+      <p>Changes push live to the scoreboard instantly</p>
+    </div>
+    <span class="admin-tag">Admin</span>
+  </div>
+
+  <div class="main">
+    <div class="summary-grid" id="summary"></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(0)">Team 1</button>
+      <button class="tab" onclick="switchTab(1)">Team 2</button>
+    </div>
+    <div id="tab0" class="tabpanel active"></div>
+    <div id="tab1" class="tabpanel"></div>
+  </div>
+
+  <div class="save-bar">
+    <span class="save-status saved" id="save-status">All changes saved</span>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────
+    const firebaseConfig = {
+      apiKey: "PASTE_API_KEY",
+      authDomain: "PASTE_AUTH_DOMAIN",
+      databaseURL: "PASTE_DATABASE_URL",
+      projectId: "PASTE_PROJECT_ID",
+      storageBucket: "PASTE_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_MESSAGING_SENDER_ID",
+      appId: "PASTE_APP_ID"
+    };
+    // ─────────────────────────────────────────────────────────
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const teamsRef = ref(db, 'teams');
+
+    const defaultTeams = [
+      { name:"Team 1", players:[
+        {name:"Jesse Desiato",misses:2,aces:0},
+        {name:"Zane Hess",misses:6,aces:6},
+        {name:"Lucian King",misses:6,aces:5},
+        {name:"Ethan Lair",misses:3,aces:2},
+        {name:"Jed Neff",misses:4,aces:5},
+        {name:"Mylan Smoker",misses:6,aces:5},
+        {name:"Jaylon Stoltzfus",misses:5,aces:10},
+        {name:"Ty Stoltzfus",misses:5,aces:2},
+      ]},
+      { name:"Team 2", players:[
+        {name:"Jesse Desiato",misses:0,aces:0},
+        {name:"Jared Kauffman",misses:5,aces:4},
+        {name:"Zach Landis",misses:5,aces:0},
+        {name:"Judah Neff",misses:6,aces:2},
+        {name:"Andrew Peckman",misses:0,aces:0},
+        {name:"Mylan Smoker",misses:4,aces:0},
+        {name:"Anthony Stoltzfus",misses:3,aces:3},
+        {name:"Cameron Stoltzfus",misses:0,aces:0},
+        {name:"Damien Stoltzfus",misses:2,aces:0},
+        {name:"Jaylon Stoltzfus",misses:10,aces:2},
+        {name:"Hayden Weaver",misses:2,aces:1},
+      ]}
+    ];
+
+    let state = { currentTab:0, teams: JSON.parse(JSON.stringify(defaultTeams)) };
+    let saveTimer = null;
+
+    const owed = p => Math.max(0, (p.misses||0)-(p.aces||0));
+    const teamOwed = ps => ps.reduce((s,p) => s+owed(p), 0);
+    const teamAces = ps => ps.reduce((s,p) => s+(p.aces||0), 0);
+
+    function scheduleSave() {
+      const el = document.getElementById('save-status');
+      el.textContent = 'Saving…'; el.className = 'save-status';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        set(teamsRef, state.teams)
+          .then(() => { el.textContent = 'All changes saved'; el.className = 'save-status saved'; })
+          .catch(() => { el.textContent = 'Save failed — check connection'; el.className = 'save-status error'; });
+      }, 500);
+    }
+
+    window.switchTab = i => {
+      state.currentTab = i;
+      document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+      document.querySelectorAll('.tabpanel').forEach((p,j)=>p.classList.toggle('active',i===j));
+      render();
+    };
+
+    function render() { renderSummary(); renderTeam(state.currentTab); }
+
+    function renderSummary() {
+      const t0 = state.teams[0]?.players||[], t1 = state.teams[1]?.players||[];
+      const po = teamOwed(t0)+teamOwed(t1), wa = teamAces(t0)+teamAces(t1);
+      document.getElementById('summary').innerHTML = `
+        <div class="metric"><div class="metric-label">Team 1 owes</div><div class="metric-value red">$${teamOwed(t0)}</div></div>
+        <div class="metric"><div class="metric-label">Team 2 owes</div><div class="metric-value red">$${teamOwed(t1)}</div></div>
+        <div class="metric"><div class="metric-label">Wingard owes</div><div class="metric-value red">$${wa}</div></div>
+        <div class="metric"><div class="metric-label">Grand total</div><div class="metric-value">$${po+wa}</div></div>`;
+    }
+
+    function renderTeam(ti) {
+      const team = state.teams[ti];
+      const el = document.getElementById('tab' + ti);
+      const wt = teamAces(team.players);
+      const rows = team.players.map((p,pi) => {
+        const o = owed(p);
+        return `<tr>
+          <td>${p.name}</td>
+          <td class="r"><input type="number" min="0" value="${p.misses||0}" onchange="upd(${ti},${pi},'misses',this.value)" /></td>
+          <td class="r"><input type="number" min="0" value="${p.aces||0}" onchange="upd(${ti},${pi},'aces',this.value)" /></td>
+          <td class="r owed ${o>0?'pos':'zero'}">$${o}</td>
+          <td class="r"><button class="btn danger" onclick="rmv(${ti},${pi})">Remove</button></td>
+        </tr>`;
+      }).join('');
+      el.innerHTML = `
+        <div class="card">
+          <div class="card-header"><span class="card-header-label">Players</span></div>
+          <table>
+            <thead><tr><th>Name</th><th class="r">Misses</th><th class="r">Aces</th><th class="r">Owes</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <div class="add-row">
+            <input type="text" id="nn${ti}" placeholder="Add player name…" onkeydown="if(event.key==='Enter')add(${ti})" />
+            <button class="btn" onclick="add(${ti})">+ Add</button>
+          </div>
+        </div>
+        <div class="wingard-row">
+          <div><div class="wingard-label">Pays total aces this session</div><div class="wingard-name">Mr. Wingard</div></div>
+          <div class="wingard-amount">$${wt}</div>
+        </div>`;
+    }
+
+    window.upd = (ti,pi,f,v) => { state.teams[ti].players[pi][f]=Math.max(0,parseInt(v)||0); renderSummary(); scheduleSave(); };
+    window.add = ti => { const i=document.getElementById('nn'+ti),n=i.value.trim(); if(!n)return; state.teams[ti].players.push({name:n,misses:0,aces:0}); i.value=''; render(); scheduleSave(); };
+    window.rmv = (ti,pi) => { if(!confirm('Remove '+state.teams[ti].players[pi].name+'?'))return; state.teams[ti].players.splice(pi,1); render(); scheduleSave(); };
+
+    onValue(teamsRef, snap => {
+      const data = snap.val();
+      state.teams = data || JSON.parse(JSON.stringify(defaultTeams));
+      if (!data) scheduleSave();
+      render();
+    }, { onlyOnce: true });
+  </script>
+</body>
+</html>

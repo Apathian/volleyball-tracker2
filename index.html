@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volleyball Slices Scoreboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0c0c0b;
+      --bg2: #161614;
+      --bg3: #1e1e1b;
+      --bg4: #252522;
+      --text: #f0efe8;
+      --text2: #8a8a82;
+      --text3: #5a5a54;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --red: #f09595;
+      --green: #97C459;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 6rem;
+    }
+    .hero { background: var(--bg2); border-bottom: 1px solid var(--border2); padding: 2rem 1.5rem 1.5rem; }
+    .hero-inner { max-width: 680px; margin: 0 auto; }
+    .hero-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+    .hero h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+    .hero p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+    .live-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green); padding: 4px 10px; border: 1px solid rgba(151,196,89,0.3); border-radius: 20px; white-space: nowrap; margin-top: 3px; }
+    .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+    .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .hero-stat { background: var(--bg3); border-radius: 10px; padding: 14px 16px; }
+    .hero-stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-family: 'DM Mono', monospace; }
+    .hero-stat-value { font-size: 26px; font-weight: 600; letter-spacing: -0.03em; font-family: 'DM Mono', monospace; }
+    .hero-stat-value.red { color: var(--red); }
+    .main { max-width: 680px; margin: 0 auto; padding: 1.5rem; }
+    .wingard { background: var(--bg2); border: 1px solid rgba(240,149,149,0.15); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .w-label { font-size: 11px; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
+    .w-name { font-size: 17px; font-weight: 600; }
+    .w-amount { font-size: 36px; font-weight: 600; color: var(--red); font-family: 'DM Mono', monospace; letter-spacing: -0.03em; }
+    .tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+    .tab { padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border); background: transparent; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+    .tab.active { background: var(--bg3); color: var(--text); border-color: var(--border2); font-weight: 500; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-header-label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'DM Mono', monospace; }
+    .card-header-note { font-size: 12px; color: var(--red); font-family: 'DM Mono', monospace; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 10px 16px; font-size: 11px; font-weight: 500; color: var(--text3); text-align: left; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.06em; font-family: 'DM Mono', monospace; }
+    th.r { text-align: right; }
+    td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    td.r { text-align: right; font-family: 'DM Mono', monospace; font-size: 13px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg3); }
+    .pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 12px; font-weight: 500; font-family: 'DM Mono', monospace; }
+    .pill-red { background: rgba(163,45,45,0.3); color: var(--red); }
+    .pill-zero { background: var(--bg3); color: var(--text2); }
+    .empty { padding: 3rem; text-align: center; color: var(--text2); font-size: 14px; }
+    .tabpanel { display: none; }
+    .tabpanel.active { display: block; }
+    .footer { text-align: center; font-size: 12px; color: var(--text3); margin-top: 2rem; font-family: 'DM Mono', monospace; }
+    @media(max-width:480px){ .hero-stats{grid-template-columns:1fr 1fr} .hero-stat-value{font-size:20px} }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-top">
+        <div>
+          <h1>Slices Scoreboard</h1>
+          <p>Miss = +$1 &nbsp;·&nbsp; Ace = −$1 player / +$1 Wingard</p>
+        </div>
+        <div class="live-pill"><span class="live-dot"></span> Live</div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-label">Grand total</div><div class="hero-stat-value" id="stat-grand">$—</div></div>
+        <div class="hero-stat"><div class="hero-stat-label">Players owe</div><div class="hero-stat-value red" id="stat-players">$—</div></div>
+        <div class="hero-stat"><div class="hero-stat-label">Wingard owes</div><div class="hero-stat-value red" id="stat-wingard">$—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="wingard">
+      <div>
+        <div class="w-label">Owes $1 per ace — all sessions</div>
+        <div class="w-name">Mr. Wingard</div>
+      </div>
+      <div class="w-amount" id="wingard-big">$—</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(0)">Team 1</button>
+      <button class="tab" onclick="switchTab(1)">Team 2</button>
+    </div>
+
+    <div id="tab0" class="tabpanel active"></div>
+    <div id="tab1" class="tabpanel"></div>
+    <div class="footer" id="footer"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    // ── PASTE YOUR FIREBASE CONFIG HERE ──────────────────────
+    const firebaseConfig = {
+      apiKey: "PASTE_API_KEY",
+      authDomain: "PASTE_AUTH_DOMAIN",
+      databaseURL: "PASTE_DATABASE_URL",
+      projectId: "PASTE_PROJECT_ID",
+      storageBucket: "PASTE_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_MESSAGING_SENDER_ID",
+      appId: "PASTE_APP_ID"
+    };
+    // ─────────────────────────────────────────────────────────
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    let teams = null, currentTab = 0;
+
+    const owed = p => Math.max(0, (p.misses||0) - (p.aces||0));
+    const teamOwed = ps => ps.reduce((s,p) => s + owed(p), 0);
+    const teamAces = ps => ps.reduce((s,p) => s + (p.aces||0), 0);
+
+    window.switchTab = i => {
+      currentTab = i;
+      document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', i===j));
+      document.querySelectorAll('.tabpanel').forEach((p,j) => p.classList.toggle('active', i===j));
+      if (teams) renderTeam(i);
+    };
+
+    function renderTeam(ti) {
+      const team = teams[ti];
+      const el = document.getElementById('tab' + ti);
+      if (!team?.players?.length) { el.innerHTML = '<div class="card"><div class="empty">No data yet</div></div>'; return; }
+      const to = teamOwed(team.players), ta = teamAces(team.players);
+      el.innerHTML = `<div class="card">
+        <div class="card-header">
+          <span class="card-header-label">Players</span>
+          <span class="card-header-note">team $${to} · wingard $${ta}</span>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th class="r">Misses</th><th class="r">Aces</th><th class="r">Owes</th></tr></thead>
+          <tbody>${team.players.map(p => `<tr>
+            <td>${p.name}</td><td class="r">${p.misses||0}</td><td class="r">${p.aces||0}</td>
+            <td class="r"><span class="pill ${owed(p)>0?'pill-red':'pill-zero'}">$${owed(p)}</span></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
+    }
+
+    onValue(ref(db, 'teams'), snap => {
+      const data = snap.val();
+      if (!data) return;
+      teams = data;
+      const t0 = data[0]?.players || [], t1 = data[1]?.players || [];
+      const pw = teamOwed(t0) + teamOwed(t1), ww = teamAces(t0) + teamAces(t1);
+      document.getElementById('stat-grand').textContent = '$' + (pw + ww);
+      document.getElementById('stat-players').textContent = '$' + pw;
+      document.getElementById('stat-wingard').textContent = '$' + ww;
+      document.getElementById('wingard-big').textContent = '$' + ww;
+      renderTeam(0); renderTeam(1);
+      document.getElementById('footer').textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    });
+  </script>
+</body>
+</html>
